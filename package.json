@@ -1,0 +1,41 @@
+{
+  "name": "react-ghost-text",
+  "version": "1.0.0",
+  "description": "React component to show ghost text suggestions in an input field (similar to VS Code or Gmail Smart Compose)",
+  "keywords": [
+    "ghost text",
+    "inline autocomplete",
+    "AI suggestions",
+    "smart compose",
+    "input field",
+    "react component"
+  ],
+  "author": "Dhruv Agarwal (https://agdhruv.github.io)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agdhruv/react-ghost-text.git"
+  },
+  "main": "./dist/AutocompleteTextbox.js",
+  "types": "./dist/AutocompleteTextbox.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "dependencies": {
+    "assert": "^2.1.0",
+    "lru-cache": "^10.2.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/assert": "^1.5.10",
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.3.0",
+    "@types/uuid": "^9.0.8",
+    "typescript": "^5.4.5"
+  }
+}
