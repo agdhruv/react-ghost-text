@@ -6,9 +6,10 @@ React component to show ghost text suggestions in an input field (similar to VS 
 - Displays auto-complete suggestions when the user pauses typing
 - Press `tab` to autocomplete (accept a suggestion)
 - Press `escape` to reject a suggestion
-- Caches suggestions at a particular position (to avoid unnecessary calls to expensive AI services)
+- Caches and re-uses suggestions to avoid unnecessary calls to expensive AI services
+- Typescript support for a good developer experience
 
-![demo](assets/demo.gif)
+![demo](https://github.com/agdhruv/react-ghost-text/blob/main/assets/demo.gif?raw=true)
 
 ## Install
 
@@ -45,18 +46,17 @@ export default function Home() {
 ### Required Props
 |Prop|Description|Type|
 |-|-|-|
-|`getSuggestion`| A function that retrieves suggestions based on user input. Usually, this will be some sort of API call to a language model. | function |
+|`getSuggestion`| A function that retrieves suggestions based on user input. Usually, this will be some sort of API call to an AI service (e.g., OpenAI or Claude API). | function |
 
 ### Optional Props
-|Prop|Description|Type|Default|
-|-|-|-|-|
-| `debounceTime` | The time to wait after the user stops typing before fetching a suggestion (in ms). Default `1000`. | integer | `1000` |
-| `suggestionClassName` | The CSS class name for the span element that contains the suggestion. This is useful for styling the suggestion. Your className will override the default class name. | string | `suggestion` |
-| `suggestionStyle` | The inline style for the span element that contains the suggestion. This is useful for styling the suggestion. Your style will override the default style. | object | `{color: "grey"}` |
-| `disableAutocomplete` | Disable autocomplete for the component. | boolean | `false` |
-| `onSuggestionShown` | An optional callback function that is called after a suggestion has been shown. | function | |
-| `onSuggestionAccepted` | An optional callback function that is called when a suggestion is accepted. | function | |
-| `onSuggestionRejected` | An optional callback function that is called when a suggestion is rejected. | function | |
-| `onContentChange` | An optional callback function that is called when the content of the textbox changes. It is called with the current content of the textbox (as HTML string). Note: This does not include the suggestion, only the main text input by the user. | function | |
-| Standard `div` props | This component accepts all standard HTML `div` attributes. This allows you to customize experience (e.g., disable paste by defining `onPaste`). | function | |
-
+|Prop|Description|Type|
+|-|-|-|
+| `debounceTime` | The time to wait after the user stops typing before fetching a suggestion (in ms). Default: `1000`. | integer |
+| `suggestionClassName` | The CSS class name for the span element that contains the suggestion. This is useful for styling the suggestion. Your className will override the default class name. Default: `suggestion`. | string |
+| `suggestionStyle` | The inline style for the span element that contains the suggestion. This is useful for styling the suggestion. Your style will override the default style. Default: `{'color':'grey'}`.| object |
+| `disableAutocomplete` | Disable autocomplete for the component. Default: `false` | boolean |
+| `onSuggestionShown` | An optional callback function that is called after a suggestion has been shown. | function |
+| `onSuggestionAccepted` | An optional callback function that is called when a suggestion is accepted. | function |
+| `onSuggestionRejected` | An optional callback function that is called when a suggestion is rejected. | function |
+| `onContentChange` | An optional callback function that is called when the content of the textbox changes. It is called with the current content of the textbox (as HTML string). Note: This does not include the suggestion, only the main text input by the user. | function |
+| Standard `div` props | This component accepts all standard HTML `div` attributes. This allows you to customize experience (e.g., disable paste by defining `onPaste`). | |
