@@ -16,8 +16,8 @@
     "type": "git",
     "url": "https://github.com/agdhruv/react-ghost-text.git"
   },
-  "main": "./dist/AutocompleteTextbox.js",
-  "types": "./dist/AutocompleteTextbox.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc"
   },
