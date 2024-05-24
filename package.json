@@ -1,6 +1,6 @@
 {
   "name": "react-ghost-text",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React component to show ghost text suggestions in an input field (similar to VS Code or Gmail Smart Compose)",
   "keywords": [
     "ghost text",
