@@ -12,6 +12,10 @@ import { SuggestionInfo, SuggestionRemovalReason, AutocompleteTextboxProps, GetS
 export default function AutocompleteTextbox({
   disableAutocomplete,
   debounceTime,
+  disabled,
+  value,
+  suggestionClassName,
+  suggestionStyle,
   getSuggestion,
   onContentChange,
   onSuggestionShown,
@@ -21,15 +25,23 @@ export default function AutocompleteTextbox({
 }: AutocompleteTextboxProps) {
   const DEBOUNCE_TIME = debounceTime || 1000;
   const textbox = useRef<HTMLDivElement | null>(null);
-  const timer = useRef<NodeJS.Timeout | null>(null);
-  const suggestionSpan = useRef<Element | null>(null);
-  const disableChangeEvent = useRef<boolean>(false);
+  const timer = useRef<NodeJS.Timeout>(setTimeout(() => { }, 0));
+  const disableSelectionEvent = useRef<boolean>(false);
+  const abortController = useRef(new AbortController()); // Create an abort controller to cancel the fetch request if the user has typed ahead
   // Create a ref to store the cache
   const suggestionCache = useRef(new LRUCache<string, string>({ max: 25 }));
 
   const isSuggestionDisplayed = (): boolean => {
-    return suggestionSpan.current !== null;
+    const suggestionElements = textbox.current?.querySelectorAll(`[${suggestionIdAttribute}]`);
+    if (!suggestionElements) return false;
+    return suggestionElements.length > 0;
   };
+
+  const getCurrentSuggestionElement = (): Element | null => {
+    const suggestionElements = textbox.current?.querySelectorAll(`[${suggestionIdAttribute}]`);
+    if (!suggestionElements || suggestionElements.length == 0) return null;
+    return suggestionElements[0];
+  }
 
   /**
    * Shows a suggestion at the caret position in the AutocompleteTextbox.
@@ -45,7 +57,8 @@ export default function AutocompleteTextbox({
     // Get the suggestion from the cache or from the getSuggestion function
     let suggestionText = suggestionCache.current.get(textUptilCaret);
     if (!suggestionText) {
-      suggestionText = await getSuggestion(textUptilCaret);
+      abortController.current = new AbortController(); // This will be used to cancel the fetch if the user types something else
+      suggestionText = await getSuggestion(textUptilCaret, abortController.current.signal); // Call the user-provided function (abortcontroller will be ignored if the user-provided function doesn't use it)
       if (!suggestionText) return; // If there's no suggestion (e.g. API error), don't show anything
       suggestionCache.current.set(textUptilCaret, suggestionText);
     }
@@ -59,12 +72,11 @@ export default function AutocompleteTextbox({
 
     // Prepare the suggestion element
     const suggestionId = 's-' + uuidv4();
-    const suggestionElement = generateSuggestionElement(suggestionText, suggestionId, props.suggestionClassName, props.suggestionStyle);
+    const suggestionElement = generateSuggestionElement(suggestionText, suggestionId, suggestionClassName, suggestionStyle);
     const isSuccessfullyInserted = insertNodeAtCaret(suggestionElement, textbox.current!, true);
 
     // Update the suggestion status
     if (isSuccessfullyInserted) {
-      suggestionSpan.current = suggestionElement;
       const suggestionInfo: SuggestionInfo = {
         id: suggestionId,
         timeShown: Date.now(),
@@ -78,12 +90,17 @@ export default function AutocompleteTextbox({
   };
 
   const removeSuggestionIfDisplayed = (reason: SuggestionRemovalReason): void => {
-    if (isSuggestionDisplayed()) {
-      const suggestion = suggestionSpan.current;
-      const suggestionId = suggestion!.getAttribute(suggestionIdAttribute)!;
-      suggestion!.remove();
-      suggestionSpan.current = null;
-
+    /**
+     * Find and remove all elements with the attribute suggestionIdAttribute.
+     * Note: Usually, this would be just one element. But there's a corner case that I can't figure out,
+     * where a past suggestion is not removed leading to multiple suggestions being displayed.
+     * So, I'm removing all suggestion elements to be safe. Redundancy is better than a bug.
+     */
+    const suggestionElements = textbox.current?.querySelectorAll(`[${suggestionIdAttribute}]`);
+    if (!suggestionElements) return;
+    suggestionElements.forEach(suggestionElement => {
+      const suggestionId = suggestionElement.getAttribute(suggestionIdAttribute)!;
+      suggestionElement.remove();
       // Call the onSuggestionRejected callback given by the user (unless the reason for removal was internal)
       if (reason !== SuggestionRemovalReason.SYSTEM) {
         onSuggestionRejected?.({
@@ -92,7 +109,7 @@ export default function AutocompleteTextbox({
           reason
         });
       }
-    }
+    });
   };
 
   const handleInput = (event: SyntheticEvent<HTMLDivElement>): void => {
@@ -107,7 +124,7 @@ export default function AutocompleteTextbox({
      */
     if (isSuggestionDisplayed()) {
       const justTyped = (event.nativeEvent as InputEvent).data;
-      const suggestionText = suggestionSpan.current!.textContent;
+      const suggestionText = getCurrentSuggestionElement()!.textContent!;
       const inputMatchesSuggestion = justTyped && suggestionText?.startsWith(justTyped);
       if (inputMatchesSuggestion) {
         removeSuggestionIfDisplayed(SuggestionRemovalReason.IMPLICIT);
@@ -118,7 +135,7 @@ export default function AutocompleteTextbox({
         const remainingSuggestion = suggestionText!.substring(justTyped!.length);
         if (remainingSuggestion) { // it may be empty by now if the user just typed the last character of the suggestion
           showSuggestionAtCaret(() => remainingSuggestion); // show the suggestion without the initial substring
-          disableChangeEvent.current = true; // If I don't do this, the change event will hide the rest of the suggestion (because this shifts the caret)
+          disableSelectionEvent.current = true; // If I don't do this, the change event will hide the rest of the suggestion (because this shifts the caret)
         }
         return;
       }
@@ -144,7 +161,7 @@ export default function AutocompleteTextbox({
       if (!isSuggestionDisplayed()) return;
 
       // Accept the suggestion and remove it
-      const suggestion = suggestionSpan.current!;
+      const suggestion = getCurrentSuggestionElement()!;
       const suggestionText = suggestion.textContent;
       assert(suggestionText);
       const suggestionId = suggestion.getAttribute(suggestionIdAttribute)!;
@@ -166,11 +183,16 @@ export default function AutocompleteTextbox({
     }
   };
 
+  const clearTimerAndAbortFetch = () => {
+    clearTimeout(timer.current);
+    abortController.current.abort();
+  };
+
   const handleSelection = (event: SyntheticEvent<HTMLDivElement>) => {
     if (disableAutocomplete) return;
 
-    if (disableChangeEvent.current) {
-      disableChangeEvent.current = false;
+    if (disableSelectionEvent.current) {
+      disableSelectionEvent.current = false;
       return;
     }
 
@@ -178,9 +200,7 @@ export default function AutocompleteTextbox({
     removeSuggestionIfDisplayed(SuggestionRemovalReason.IMPLICIT);
 
     // Clear the timer if it exists
-    if (timer.current) {
-      clearTimeout(timer.current);
-    }
+    clearTimerAndAbortFetch();
 
     let selection = window.getSelection(); // guaranteed to be within the textbox (called onSelection of the textbox)
     if (!selection || !selection.isCollapsed) return;
@@ -196,14 +216,13 @@ export default function AutocompleteTextbox({
 
   const handleBlur = () => {
     removeSuggestionIfDisplayed(SuggestionRemovalReason.IMPLICIT);
-    if (timer.current) {
-      clearTimeout(timer.current);
-    }
+    clearTimerAndAbortFetch();
   };
 
   return (
     <div
-      contentEditable="true"
+      contentEditable={disabled ? "false" : "true"}
+      suppressContentEditableWarning={true}
       ref={textbox}
       onInput={(event) => handleInput(event)}
       onSelect={(event) => handleSelection(event)}
@@ -211,6 +230,7 @@ export default function AutocompleteTextbox({
       onBlur={handleBlur}
       {...props}
     >
+      {value || null}
     </div>
   );
 

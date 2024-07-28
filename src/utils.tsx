@@ -123,7 +123,12 @@ export const getTextUptilCaretInElement = (element: HTMLDivElement): string => {
   // 1. Clone the contents of the range into a div
   // 2. Replace <br> with \n
   // 3. Get the innerText of the div
-  range.setStart(element, 0);
+  try {
+    range.setStart(element, 0);
+  } catch (e) {
+    console.error("Error setting range start:", e);
+    return "";
+  }
 
   // Create a div and clone the contents of the range into it
   const div = document.createElement("div");

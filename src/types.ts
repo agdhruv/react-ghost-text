@@ -1,7 +1,17 @@
+/**
+ * Represents the props for the AutocompleteTextbox component.
+ */
 export interface AutocompleteTextboxProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * A function that retrieves suggestions based on user input.
    * Usually, this will be some sort of API call to a language model.
+   * 
+   * When a user types, react-ghost-text will call this function with the text up
+   * to the caret position, and display the suggestion returned by this function as
+   * ghost text.
+   * 
+   * See the `GetSuggestionFn` type for information about the parameters and return
+   * value of this function.
    */
   getSuggestion: GetSuggestionFn;
 
@@ -48,9 +58,20 @@ export interface AutocompleteTextboxProps extends React.HTMLAttributes<HTMLDivEl
 
   /**
    * The time to wait after the user stops typing before fetching a suggestion (in ms).
+   * Lower values will make the suggestion appear faster but may cause more API calls.
    * Default is 1000ms.
    */
   debounceTime?: number;
+
+  /**
+   * Disable the textbox from being edited.
+   */
+  disabled?: boolean;
+
+  /**
+   * The initial content of the textbox.
+   */
+  value?: string;
 }
 
 /**
@@ -87,4 +108,38 @@ export interface SuggestionAcceptedInfo {
   timeAccepted: number;
 };
 
-export type GetSuggestionFn = (textUptilCaret: string) => string | Promise<string>;
+/**
+ * A function that retrieves suggestions based on user input.
+ * Usually, this will be some sort of API call to a language model.
+ * 
+ * Since typing is such a fast/dynamic activity, sometimes you may want to abort
+ * the suggestion retrieval if the user has typed ahead and the suggestion from
+ * the previous text is no longer relevant. In such cases, you can use the optional
+ * `abortSignal` parameter and tha package will use it to abort the suggestion
+ * retrieval if the user has typed ahead. This is an advanced feature but improves
+ * the user experience.
+ * 
+ * Here's an example of how you might use this function. This example assumes that
+ * you have an API endpoint that returns a suggestion based on the the text sent to it.
+ * 
+ * ```typescript
+  const getSuggestion: GetSuggestionFn = async (textUptilNow: string, abortSignal?: AbortSignal): Promise<string> => {
+    if (textUptilNow === "") return "";
+
+    const response = await fetch('YOUR_API_ENDPOINT', {
+      method: 'POST',
+      body: JSON.stringify({ textUptilNow }),
+      signal: abortSignal
+    });
+
+    const suggestion = (await response.json()).suggestion;
+    return suggestion;
+  };
+ ```
+ * 
+ * 
+ * @param textUptilCaret - The text up to the caret position.
+ * @param abortSignal - An optional AbortSignal object that can be used to abort the suggestion retrieval.
+ * @returns A string or a Promise that resolves to a string representing the suggestion.
+ */
+export type GetSuggestionFn = (textUptilCaret: string, abortSignal?: AbortSignal) => string | Promise<string>;
