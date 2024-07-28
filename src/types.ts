@@ -58,6 +58,7 @@ export interface AutocompleteTextboxProps extends React.HTMLAttributes<HTMLDivEl
 
   /**
    * The time to wait after the user stops typing before fetching a suggestion (in ms).
+   * Lower values will make the suggestion appear faster but may cause more API calls.
    * Default is 1000ms.
    */
   debounceTime?: number;
