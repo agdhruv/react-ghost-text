@@ -23,7 +23,7 @@ export default function AutocompleteTextbox({
   const textbox = useRef<HTMLDivElement | null>(null);
   const timer = useRef<NodeJS.Timeout | null>(null);
   const suggestionSpan = useRef<Element | null>(null);
-  const disableChangeEvent = useRef<boolean>(false);
+  const disableSelectionEvent = useRef<boolean>(false);
   // Create a ref to store the cache
   const suggestionCache = useRef(new LRUCache<string, string>({ max: 25 }));
 
@@ -118,7 +118,7 @@ export default function AutocompleteTextbox({
         const remainingSuggestion = suggestionText!.substring(justTyped!.length);
         if (remainingSuggestion) { // it may be empty by now if the user just typed the last character of the suggestion
           showSuggestionAtCaret(() => remainingSuggestion); // show the suggestion without the initial substring
-          disableChangeEvent.current = true; // If I don't do this, the change event will hide the rest of the suggestion (because this shifts the caret)
+          disableSelectionEvent.current = true; // If I don't do this, the change event will hide the rest of the suggestion (because this shifts the caret)
         }
         return;
       }
@@ -169,8 +169,8 @@ export default function AutocompleteTextbox({
   const handleSelection = (event: SyntheticEvent<HTMLDivElement>) => {
     if (disableAutocomplete) return;
 
-    if (disableChangeEvent.current) {
-      disableChangeEvent.current = false;
+    if (disableSelectionEvent.current) {
+      disableSelectionEvent.current = false;
       return;
     }
 
@@ -203,7 +203,7 @@ export default function AutocompleteTextbox({
 
   return (
     <div
-      contentEditable="true"
+      contentEditable={props.disabled ? "false" : "true"}
       ref={textbox}
       onInput={(event) => handleInput(event)}
       onSelect={(event) => handleSelection(event)}

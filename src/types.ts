@@ -1,3 +1,6 @@
+/**
+ * Represents the props for the AutocompleteTextbox component.
+ */
 export interface AutocompleteTextboxProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * A function that retrieves suggestions based on user input.
@@ -51,6 +54,11 @@ export interface AutocompleteTextboxProps extends React.HTMLAttributes<HTMLDivEl
    * Default is 1000ms.
    */
   debounceTime?: number;
+
+  /**
+   * Disable the textbox from being edited.
+   */
+  disabled?: boolean;
 }
 
 /**
