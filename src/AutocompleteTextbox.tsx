@@ -12,6 +12,10 @@ import { SuggestionInfo, SuggestionRemovalReason, AutocompleteTextboxProps, GetS
 export default function AutocompleteTextbox({
   disableAutocomplete,
   debounceTime,
+  disabled,
+  value,
+  suggestionClassName,
+  suggestionStyle,
   getSuggestion,
   onContentChange,
   onSuggestionShown,
@@ -68,7 +72,7 @@ export default function AutocompleteTextbox({
 
     // Prepare the suggestion element
     const suggestionId = 's-' + uuidv4();
-    const suggestionElement = generateSuggestionElement(suggestionText, suggestionId, props.suggestionClassName, props.suggestionStyle);
+    const suggestionElement = generateSuggestionElement(suggestionText, suggestionId, suggestionClassName, suggestionStyle);
     const isSuccessfullyInserted = insertNodeAtCaret(suggestionElement, textbox.current!, true);
 
     // Update the suggestion status
@@ -217,7 +221,8 @@ export default function AutocompleteTextbox({
 
   return (
     <div
-      contentEditable={props.disabled ? "false" : "true"}
+      contentEditable={disabled ? "false" : "true"}
+      suppressContentEditableWarning={true}
       ref={textbox}
       onInput={(event) => handleInput(event)}
       onSelect={(event) => handleSelection(event)}
@@ -225,6 +230,7 @@ export default function AutocompleteTextbox({
       onBlur={handleBlur}
       {...props}
     >
+      {value || null}
     </div>
   );
 

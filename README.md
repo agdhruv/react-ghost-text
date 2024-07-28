@@ -48,15 +48,17 @@ export default function Home() {
 ### Required Props
 |Prop|Description|Type|
 |-|-|-|
-|`getSuggestion`| A function that retrieves suggestions based on user input. Usually, this will be some sort of API call to an AI service (e.g., OpenAI or Claude API). | function |
+|`getSuggestion`| A function that retrieves suggestions based on user input. Usually, this will be an API call to an AI service (e.g., OpenAI or Claude API). | function |
 
 ### Optional Props
 |Prop|Description|Type|
 |-|-|-|
+| `value` | Initial value of the textbox. | string |
 | `debounceTime` | The time to wait after the user stops typing before fetching a suggestion (in ms). Default: `1000`. | integer |
 | `suggestionClassName` | The CSS class name for the span element that contains the suggestion. This is useful for styling the suggestion. Your className will override the default class name. Default: `suggestion`. | string |
 | `suggestionStyle` | The inline style for the span element that contains the suggestion. This is useful for styling the suggestion. Your style will override the default style. Default: `{'color':'grey'}`.| object |
-| `disableAutocomplete` | Disable autocomplete for the component. Default: `false` | boolean |
+| `disableAutocomplete` | Disable autocomplete suggestions for the component. Default: `false` | boolean |
+| `disabled` | Disable editing in the component (unlike the above, this disables the textbox itself, not the suggestions). Default: `false` | boolean |
 | `onSuggestionShown` | An optional callback function that is called after a suggestion has been shown. | function |
 | `onSuggestionAccepted` | An optional callback function that is called when a suggestion is accepted. | function |
 | `onSuggestionRejected` | An optional callback function that is called when a suggestion is rejected. | function |
