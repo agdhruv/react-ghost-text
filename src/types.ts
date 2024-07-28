@@ -95,4 +95,4 @@ export interface SuggestionAcceptedInfo {
   timeAccepted: number;
 };
 
-export type GetSuggestionFn = (textUptilCaret: string) => string | Promise<string>;
+export type GetSuggestionFn = (textUptilCaret: string, abortSignal?: AbortSignal) => string | Promise<string>;
